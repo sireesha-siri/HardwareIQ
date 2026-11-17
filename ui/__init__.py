@@ -1,5 +1,5 @@
 # HardwareIQ UI package
-from ui.icons import get_icon
+from ui.icons import get_icon, LUCIDE_PATHS
 from ui.styles import get_theme_css
 from ui.components import (
     clean_html,
@@ -7,24 +7,41 @@ from ui.components import (
     render_hero_header,
     render_overview_cards,
     render_semicircular_gauge,
+    render_gpu_status_visual,
     render_per_core_chart,
     render_cpu_telemetry_panel,
+    render_cpu_history_chart,
+    render_cpu_history_panel,
+    render_per_core_history_chart,
+    render_per_core_history_panel,
+    render_memory_allocation_donut_chart,
     render_memory_breakdown_panel,
     render_runtime_history_chart,
+    render_runtime_history_panel,
     render_filesystem_table,
+    render_filesystem_panel,
 )
 
 __all__ = [
     "get_icon",
+    "LUCIDE_PATHS",
     "get_theme_css",
     "clean_html",
     "render_html",
     "render_hero_header",
     "render_overview_cards",
     "render_semicircular_gauge",
+    "render_gpu_status_visual",
     "render_per_core_chart",
     "render_cpu_telemetry_panel",
+    "render_cpu_history_chart",
+    "render_cpu_history_panel",
+    "render_per_core_history_chart",
+    "render_per_core_history_panel",
+    "render_memory_allocation_donut_chart",
     "render_memory_breakdown_panel",
     "render_runtime_history_chart",
+    "render_runtime_history_panel",
     "render_filesystem_table",
+    "render_filesystem_panel",
 ]

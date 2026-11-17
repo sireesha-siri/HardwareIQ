@@ -341,7 +341,10 @@ def render_per_core_chart(per_cpu: List[float]) -> None:
         y=alt.Y("Core:N", sort=None, title=None, axis=alt.Axis(
             labelColor="#F8FAFC",
             labelFontSize=12,
-            labelFontWeight="bold"
+            labelFontWeight="bold",
+            domain=False,
+            ticks=False,
+            grid=False
         ))
     )
 
@@ -351,7 +354,7 @@ def render_per_core_chart(per_cpu: List[float]) -> None:
         size=22
     ).encode(
         x=alt.X("Load:Q", scale=alt.Scale(domain=[0, 100]), title=None, axis=None),
-        y=alt.Y("Core:N", sort=None),
+        y=alt.Y("Core:N", sort=None, title=None, axis=None),
         color=alt.Color(
             "Load:Q",
             scale=alt.Scale(
@@ -372,7 +375,7 @@ def render_per_core_chart(per_cpu: List[float]) -> None:
         fontWeight=600
     ).encode(
         x=alt.X("Load:Q"),
-        y=alt.Y("Core:N", sort=None),
+        y=alt.Y("Core:N", sort=None, title=None, axis=None),
         text=alt.Text("Load:Q", format=".1f")
     )
 
@@ -393,11 +396,19 @@ def render_per_core_chart(per_cpu: List[float]) -> None:
             domain=False,
             grid=False,
             ticks=False,
-            labelColor="#CBD5E1",
-            titleColor="#CBD5E1"
+            labelColor="#F8FAFC",
+            titleColor="#F8FAFC"
+        )
+        .configure_axisY(
+            domain=False,
+            grid=False,
+            ticks=False,
+            labelColor="#F8FAFC",
+            labelFontSize=12,
+            labelFontWeight="bold"
         )
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True, theme=None)
 
 
 def render_cpu_telemetry_panel(per_cpu: List[float], cpu_details: Dict[str, Any]) -> None:
@@ -490,8 +501,14 @@ def render_memory_allocation_donut_chart(mem_details: Dict[str, Any]) -> None:
             stroke=None,
             fill="transparent"
         )
+        .configure_legend(
+            labelColor="#CBD5E1",
+            titleColor="#CBD5E1",
+            fillColor="transparent",
+            strokeColor="transparent"
+        )
     )
-    st.altair_chart(donut, use_container_width=True)
+    st.altair_chart(donut, use_container_width=True, theme=None)
 
 
 def render_memory_breakdown_panel(mem_details: Dict[str, Any]) -> None:
@@ -615,7 +632,7 @@ def render_cpu_history_chart(history_records: List[Dict[str, Any]]) -> None:
             titleFontSize=12
         )
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True, theme=None)
 
 
 def render_per_core_history_chart(history_records: List[Dict[str, Any]]) -> None:
@@ -695,7 +712,7 @@ def render_per_core_history_chart(history_records: List[Dict[str, Any]]) -> None
             titleFontSize=12
         )
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True, theme=None)
 
 
 def render_runtime_history_chart(history_records: List[Dict[str, Any]]) -> None:
@@ -775,7 +792,7 @@ def render_runtime_history_chart(history_records: List[Dict[str, Any]]) -> None:
             strokeColor="transparent"
         )
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, use_container_width=True, theme=None)
 
 
 def render_filesystem_table(mounted_fs: List[Dict[str, Any]]) -> None:

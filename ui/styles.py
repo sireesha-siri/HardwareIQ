@@ -106,37 +106,145 @@ html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 }}
 
 /* ==========================================================================
-   ELIMINATE EVERY WHITE BACKGROUND (ALTAIR CHARTS & BOTTOM CONTAINERS)
+   ELIMINATE EVERY WHITE BACKGROUND (ALTAIR CHARTS, VEGA & BOTTOM CONTAINERS)
    ========================================================================== */
 
-/* Vega-Lite / Altair Chart Transparency Overrides */
+/* 1. Vega-Lite / Altair Chart Transparency & Dark Plot Overrides */
 .vega-embed,
 .vega-embed svg,
 .vega-embed canvas,
+.vega-embed .background,
 .vega-embed rect.background,
-div[data-testid="stVegaLiteChart"] {{
+.vega-embed path.background,
+.vega-embed g.role-frame > path,
+.vega-embed g.role-frame > rect,
+.vega-embed g.mark-group.root > path,
+.vega-embed g.mark-group.root > rect,
+div[data-testid="stVegaLiteChart"],
+div[data-testid="stArrowVegaLiteChart"],
+div[data-testid="stVegaLiteChart"] > div,
+div[data-testid="stArrowVegaLiteChart"] > div {{
     background: transparent !important;
     background-color: transparent !important;
     fill: transparent !important;
 }}
 
-/* Streamlit Floating Bottom Container (Fixes white bar in Microsoft Edge / Light Mode) */
-[data-testid="stBottom"],
-[data-testid="stBottomBlockContainer"],
-.stChatFloatingInputContainer {{
-    background: transparent !important;
-    background-color: transparent !important;
+/* Ensure Vega axis labels, titles, marks, and legends are crisp white/cyan and high contrast */
+.vega-embed text,
+.vega-embed .role-axis text,
+.vega-embed .role-axis-label text,
+.vega-embed .role-axis-title text,
+.vega-embed .role-legend-label text,
+.vega-embed .role-legend-title text,
+.vega-embed text[role="graphics-symbol"] {{
+    fill: #F8FAFC !important;
+    color: #F8FAFC !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}}
+
+/* Dark Vega Gridlines and Axis Lines */
+.vega-embed .role-axis-grid line {{
+    stroke: #1E2D42 !important;
+    stroke-opacity: 0.8 !important;
+}}
+
+.vega-embed .role-axis-domain path,
+.vega-embed .role-axis-tick line {{
+    stroke: #243B53 !important;
+}}
+
+/* Vega Action Menu & Tooltip Dark Theme */
+.vega-embed summary {{
+    opacity: 0.45 !important;
+}}
+.vega-embed summary:hover {{
+    opacity: 1 !important;
+}}
+.vega-actions {{
+    background-color: #111F32 !important;
+    border: 1px solid #243B53 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}}
+.vega-actions a {{
+    color: #CBD5E1 !important;
+}}
+.vega-actions a:hover {{
+    color: #22D3EE !important;
+}}
+
+#vg-tooltip-element,
+.vg-tooltip,
+.vg-tooltip.dark-theme,
+.vg-tooltip.light-theme {{
+    background-color: #111F32 !important;
+    background: #111F32 !important;
+    border: 1px solid #243B53 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    color: #F8FAFC !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 0.82rem !important;
+    padding: 8px 12px !important;
+    z-index: 999999 !important;
+}}
+
+#vg-tooltip-element table tr td,
+.vg-tooltip table tr td {{
+    color: #F8FAFC !important;
     border: none !important;
 }}
 
+#vg-tooltip-element table tr td.key,
+.vg-tooltip table tr td.key {{
+    color: #94A3B8 !important;
+    font-weight: 500 !important;
+    padding-right: 8px !important;
+}}
+
+#vg-tooltip-element table tr td.value,
+.vg-tooltip table tr td.value {{
+    color: #22D3EE !important;
+    font-weight: 600 !important;
+}}
+
+/* 2. Streamlit Floating Bottom Container (Universal Dark across light/dark browser environments) */
+[data-testid="stBottom"],
+[data-testid="stBottom"] > div,
+[data-testid="stBottom"] div,
+[data-testid="stBottomBlockContainer"],
+.stBottom,
+.stBottom > div,
+.stBottom div,
+div[class*="stBottom"],
+.stChatFloatingInputContainer,
+div[class*="ea3mdgi6"],
+div[class*="ea3mdgi7"],
+div[class*="ea3mdgi2"],
+div[class*="ea3mdgi"] {{
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}}
+
+/* Seamless Dark Gradient Floating Mask on Bottom Viewport */
+[data-testid="stBottom"] {{
+    background: linear-gradient(180deg, rgba(8, 11, 18, 0) 0%, rgba(8, 11, 18, 0.92) 24%, #080B12 100%) !important;
+}}
+
 [data-testid="stBottom"] > div {{
-    background: linear-gradient(180deg, rgba(8, 11, 18, 0) 0%, rgba(8, 11, 18, 0.94) 28%, #080B12 100%) !important;
+    background: transparent !important;
+    background-color: transparent !important;
     padding-bottom: 1.25rem !important;
 }}
 
-/* Chat Input Styling */
-[data-testid="stChatInput"] {{
-    background-color: var(--bg-secondary) !important;
+/* Chat Input Outer Container */
+[data-testid="stChatInput"],
+div[class*="e1d2x3se4"],
+div[class*="e1d2x3se"] {{
+    background: #0D1422 !important;
+    background-color: #0D1422 !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
@@ -148,24 +256,45 @@ div[data-testid="stVegaLiteChart"] {{
     box-shadow: 0 0 18px rgba(6, 182, 212, 0.25) !important;
 }}
 
-[data-testid="stChatInput"] textarea {{
+/* Inner Input Wrappers, BaseWeb Elements & Textarea */
+[data-testid="stChatInput"] > div,
+[data-testid="stChatInput"] div,
+[data-testid="stChatInput"] [data-baseweb="base-input"],
+[data-testid="stChatInput"] [data-baseweb="textarea"],
+[data-testid="stChatInput"] div[class*="StyledTextAreaRoot"],
+[data-testid="stChatInput"] div[class*="e1d2x3se3"] {{
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}}
+
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInputTextArea"] {{
+    background: transparent !important;
     background-color: transparent !important;
     color: var(--text-primary) !important;
     font-size: 0.92rem !important;
+    border: none !important;
+    outline: none !important;
 }}
 
-[data-testid="stChatInput"] textarea::placeholder {{
+[data-testid="stChatInput"] textarea::placeholder,
+[data-testid="stChatInputTextArea"]::placeholder {{
     color: var(--text-muted) !important;
 }}
 
-[data-testid="stChatInput"] button {{
+[data-testid="stChatInput"] button,
+[data-testid="stChatInputSubmitButton"] {{
     background: transparent !important;
+    background-color: transparent !important;
     color: var(--accent-cyan-core) !important;
     border: none !important;
 }}
 
-[data-testid="stChatInput"] button:hover {{
+[data-testid="stChatInput"] button:hover,
+[data-testid="stChatInputSubmitButton"]:hover {{
     color: var(--accent-cyan-neon) !important;
+    background: transparent !important;
 }}
 
 /* ==========================================================================
