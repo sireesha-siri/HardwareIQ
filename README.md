@@ -108,7 +108,7 @@ HardwareIQ utilizes a clean, layered architecture separating diagnostic executio
 │   └── command_executor.py     # Safe allow-listed subprocess executor
 └── tests/
     ├── __init__.py             # Tests package
-    ├── test_hardwareiq.py      # Core subsystem unit tests (17 tests)
+    ├── test_hardwareiq.py      # Core subsystem unit tests (35 tests)
     └── test_ui.py              # Lucide icons, theme, & gauge tests (6 tests)
 ```
 
@@ -184,12 +184,14 @@ HardwareIQ includes an automated test suite covering command allow-listing, hard
 
 ### Test Results
 ```text
-Ran 23 tests in 2.945s
-
-OK
+Ran 35 tests in tests/test_hardwareiq.py: OK
+Ran 6 tests in tests/test_ui.py: OK
+Total: 41 tests passed
 ```
 
-All 23 tests passed:
+All 41 tests passed (35 in `test_hardwareiq.py`, 6 in `test_ui.py`):
+
+**Core Subsystem, Architecture & Gemini Tests (`tests/test_hardwareiq.py` — 35 tests):**
 - `test_permitted_command`: Verifies allow-listed binaries pass validation.
 - `test_disallowed_command_rejected`: Verifies unauthorized binaries (`rm`, `bash`, `cat`) are rejected.
 - `test_disallowed_arguments_rejected`: Blocks unapproved flags.
@@ -206,7 +208,27 @@ All 23 tests passed:
 - `test_intent_classification`: Tests natural-language intent classification across all components.
 - `test_routing_execution`: Verifies accurate responses to specific questions.
 - `test_offline_fallback`: Verifies graceful operation when offline without an API key.
+- `test_gemini_model_configuration`: Verifies configured Gemini model is `gemini-3.8-flash`.
+- `test_call_gemini_api_uses_gemini_38_flash_endpoint`: Verifies `call_gemini_api` sends requests to the `gemini-3.8-flash` endpoint with grounded diagnostic context.
+- `test_call_gemini_api_network_error_fallback`: Verifies graceful fallback to offline mode on network or API exceptions.
 - `test_streamlit_app_loads`: Uses Streamlit's `AppTest` to verify that the UI renders without exceptions.
+- `test_navigation_persistence_and_double_click`: Verifies double-clicking active navigation never resets the view.
+- `test_session_state_preserved_during_navigation`: Verifies messages and telemetry persist across view switches.
+- `test_all_views_render_without_exception`: Verifies all 4 dashboard sections render cleanly.
+- `test_view_system_dashboard`: Validates clean rendering of the System Dashboard overview.
+- `test_view_real_time_monitoring`: Validates live telemetry graphs and metrics rendering.
+- `test_view_ai_hardware_assistant`: Validates conversational assistant interface and history rendering.
+- `test_view_subprocess_security`: Validates allow-list audit table and command execution viewer.
+- `test_chat_input_flow_and_clear_chat`: Verifies asking a question redirects to Assistant and Clear Chat resets history.
+- `test_altair_chart_specs_transparent_background`: Verifies Altair chart specifications have transparent backgrounds and fills.
+- `test_donut_chart_and_multi_core_timeline`: Verifies donut chart and multi-core history charts create valid transparent specs.
+- `test_telemetry_recording_per_core_data`: Verifies session telemetry records per-core utilization readings.
+- `test_theme_css_contains_dark_overrides`: Confirms all dark theme tokens, bottom containers, and Vega transparency.
+- `test_gauge_and_memory_panel_rendering`: Verifies SVG semicircular gauge output, GPU visual, and HTML cleaning.
+- `test_unknown_intent_polite_fallback`: Verifies out-of-scope query routing returns helpful guidance.
+- `test_overview_intent_synthesis`: Verifies complete system specification breakdown on overview questions.
+
+**UI, Theme & Visual Component Tests (`tests/test_ui.py` — 6 tests):**
 - `test_all_specified_icons_exist`: Verifies all 22 required Lucide icons exist in the local SVG dictionary.
 - `test_icon_svg_generation`: Verifies SVG markup, size, stroke color, and accessibility attributes.
 - `test_fallback_icon`: Verifies graceful fallback for unknown icon names.

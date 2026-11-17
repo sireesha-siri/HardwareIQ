@@ -1,8 +1,9 @@
 """
 HardwareIQ - CSS Design System & Theme Styles
 Custom styling for the Streamlit hardware monitoring dashboard and assistant.
-Strictly implements the specified color palette, gradients, card elevations,
-responsive typography, and locally embedded Lucide icon navigation.
+Strictly implements the specified dark-tech color palette, layered radial gradients,
+card elevations, responsive typography, locally embedded Lucide icon navigation,
+and eliminates all white backgrounds in any browser environment.
 Compatible with Python 3.8+ and Streamlit 1.39.0.
 """
 
@@ -23,16 +24,31 @@ def make_svg_data_uri(name: str, color: str = "#22D3EE") -> str:
 
 
 def get_theme_css() -> str:
-    """Returns the complete CSS stylesheet for HardwareIQ with Lucide SVG navigation."""
+    """Returns the complete CSS stylesheet for HardwareIQ with Lucide SVG navigation and theme overrides."""
+    # Navigation icons
     uri_dashboard = make_svg_data_uri("layout-dashboard", "#22D3EE")
     uri_monitoring = make_svg_data_uri("activity", "#22D3EE")
     uri_assistant = make_svg_data_uri("bot", "#22D3EE")
     uri_security = make_svg_data_uri("shield-check", "#22D3EE")
 
+    # Action button icons
+    uri_refresh = make_svg_data_uri("refresh-cw", "#22D3EE")
+    uri_clear = make_svg_data_uri("trash-2", "#EF4444")
+
+    # Quick query button icons
+    uri_q_cpu = make_svg_data_uri("cpu", "#38BDF8")
+    uri_q_cores = make_svg_data_uri("gauge", "#38BDF8")
+    uri_q_ram = make_svg_data_uri("memory-stick", "#38BDF8")
+    uri_q_mem_util = make_svg_data_uri("database", "#38BDF8")
+    uri_q_disks = make_svg_data_uri("hard-drive", "#38BDF8")
+    uri_q_gpu = make_svg_data_uri("monitor", "#38BDF8")
+    uri_q_overview = make_svg_data_uri("layout-dashboard", "#38BDF8")
+
     return f"""
 <style>
 /* ==========================================================================
    HARDWAREIQ THEME SYSTEM & CSS RESET
+   Strict Dark Tech Identity: Corsair iCUE / NZXT CAM / Grafana Aesthetic
    ========================================================================== */
 
 :root {{
@@ -59,49 +75,114 @@ def get_theme_css() -> str:
     --status-error: #EF4444;
 }}
 
-/* Global Background with Layered Radial Gradients */
-.stApp {{
+/* Universal Dark Background Across Entire Window */
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {{
+    background-color: var(--bg-primary) !important;
     background:
-        radial-gradient(ellipse at 15% 0%, rgba(37,99,235,0.16), transparent 42%),
-        radial-gradient(ellipse at 85% 15%, rgba(6,182,212,0.10), transparent 38%),
+        radial-gradient(ellipse at 15% 0%, rgba(37, 99, 235, 0.16), transparent 42%),
+        radial-gradient(ellipse at 85% 15%, rgba(6, 182, 212, 0.10), transparent 38%),
         linear-gradient(135deg, #080B12 0%, #0D1422 55%, #080B12 100%) !important;
     color: var(--text-primary) !important;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     overflow-x: hidden !important;
 }}
 
-/* Centered Main Layout Container (Fixes Horizontal Stretch & Excessive Empty Space) */
+/* Main Centered Layout with Safe Bottom Padding (Prevents overlap with fixed chat input) */
 .main .block-container {{
     max-width: 1380px !important;
     padding-top: 1.5rem !important;
-    padding-bottom: 3rem !important;
+    padding-bottom: 7.5rem !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
     margin-left: auto !important;
     margin-right: auto !important;
 }}
 
-/* Sidebar Customization */
+/* Hide Default Streamlit Header/Footer/Decoration */
+#MainMenu, footer, header[data-testid="stHeader"], [data-testid="stDecoration"] {{
+    visibility: hidden !important;
+    display: none !important;
+    height: 0 !important;
+}}
+
+/* ==========================================================================
+   ELIMINATE EVERY WHITE BACKGROUND (ALTAIR CHARTS & BOTTOM CONTAINERS)
+   ========================================================================== */
+
+/* Vega-Lite / Altair Chart Transparency Overrides */
+.vega-embed,
+.vega-embed svg,
+.vega-embed canvas,
+.vega-embed rect.background,
+div[data-testid="stVegaLiteChart"] {{
+    background: transparent !important;
+    background-color: transparent !important;
+    fill: transparent !important;
+}}
+
+/* Streamlit Floating Bottom Container (Fixes white bar in Microsoft Edge / Light Mode) */
+[data-testid="stBottom"],
+[data-testid="stBottomBlockContainer"],
+.stChatFloatingInputContainer {{
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+}}
+
+[data-testid="stBottom"] > div {{
+    background: linear-gradient(180deg, rgba(8, 11, 18, 0) 0%, rgba(8, 11, 18, 0.94) 28%, #080B12 100%) !important;
+    padding-bottom: 1.25rem !important;
+}}
+
+/* Chat Input Styling */
+[data-testid="stChatInput"] {{
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+    transition: all 0.25s ease !important;
+}}
+
+[data-testid="stChatInput"]:focus-within {{
+    border-color: var(--accent-cyan-core) !important;
+    box-shadow: 0 0 18px rgba(6, 182, 212, 0.25) !important;
+}}
+
+[data-testid="stChatInput"] textarea {{
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+    font-size: 0.92rem !important;
+}}
+
+[data-testid="stChatInput"] textarea::placeholder {{
+    color: var(--text-muted) !important;
+}}
+
+[data-testid="stChatInput"] button {{
+    background: transparent !important;
+    color: var(--accent-cyan-core) !important;
+    border: none !important;
+}}
+
+[data-testid="stChatInput"] button:hover {{
+    color: var(--accent-cyan-neon) !important;
+}}
+
+/* ==========================================================================
+   SIDEBAR NAVIGATION: LUCIDE ICONS & SLEEK PILLS (NO EMOJIS / NO RADIO DOTS)
+   ========================================================================== */
+
+/* Sidebar Customization (Clean Original Appearance) */
 [data-testid="stSidebar"] {{
     background-color: var(--bg-sidebar) !important;
     border-right: 1px solid var(--border-subtle) !important;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: none !important;
 }}
 
 [data-testid="stSidebar"] .block-container {{
     padding-top: 1.5rem !important;
     padding-bottom: 2rem !important;
 }}
-
-/* Hide Default Streamlit Header/Footer */
-#MainMenu, footer, header[data-testid="stHeader"] {{
-    visibility: hidden !important;
-    height: 0 !important;
-}}
-
-/* ==========================================================================
-   SIDEBAR NAVIGATION: LUCIDE ICONS & SLEEK PILLS (NO EMOJIS / NO RADIO DOTS)
-   ========================================================================== */
 
 /* Hide default circular radio input dots */
 div[data-testid="stRadio"] div[role="radiogroup"] > label > div:first-child {{
@@ -149,7 +230,7 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:hover span {{
 /* Active state styling */
 div[data-testid="stRadio"] div[role="radiogroup"] > label[data-checked="true"],
 div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) {{
-    background: linear-gradient(135deg, rgba(37,99,235,0.25) 0%, rgba(6,182,212,0.18) 100%) !important;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(6, 182, 212, 0.18) 100%) !important;
     border: 1px solid #06B6D4 !important;
     box-shadow: 0 4px 16px rgba(6, 182, 212, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }}
@@ -160,7 +241,7 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:has(input:checked) p {
     font-weight: 600 !important;
 }}
 
-/* Inject Lucide SVGs as aligned prefix icons */
+/* Navigation Prefix Icons */
 div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(1)::before {{
     content: "";
     display: inline-block;
@@ -201,8 +282,15 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
     flex-shrink: 0;
 }}
 
-/* Sidebar Quick Query Buttons */
+/* ==========================================================================
+   SIDEBAR ACTION & QUICK QUERY BUTTONS (WITH LOCALLY EMBEDDED LUCIDE ICONS)
+   ========================================================================== */
+
+/* Common Sidebar Button Styling */
 [data-testid="stSidebar"] div.stButton > button {{
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
     text-align: left !important;
     justify-content: flex-start !important;
     font-size: 0.82rem !important;
@@ -212,7 +300,8 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
     border: 1px solid #1E2D42 !important;
     color: var(--text-secondary) !important;
     width: 100% !important;
-    margin-bottom: 2px !important;
+    margin-bottom: 4px !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }}
 
 [data-testid="stSidebar"] div.stButton > button:hover {{
@@ -220,18 +309,129 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
     border-color: var(--accent-cyan-core) !important;
     color: var(--text-primary) !important;
     transform: translateX(3px) !important;
-    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15) !important;
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.18) !important;
+}}
+
+/* Sidebar Refresh & Clear Action Buttons */
+[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] div.stButton > button {{
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 8px 6px !important;
+    font-weight: 600 !important;
+}}
+
+/* Refresh Telemetry Button Icon */
+[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] div[data-testid="column"]:first-child button::before {{
+    content: "";
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background: url("{uri_refresh}") no-repeat center;
+    background-size: contain;
+    margin-right: 4px;
+    flex-shrink: 0;
+}}
+
+/* Clear Chat Button Icon */
+[data-testid="stSidebar"] div[data-testid="stHorizontalBlock"] div[data-testid="column"]:last-child button::before {{
+    content: "";
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background: url("{uri_clear}") no-repeat center;
+    background-size: contain;
+    margin-right: 4px;
+    flex-shrink: 0;
+}}
+
+/* Quick Query 7 Buttons: Sequential Lucide Icons */
+.sidebar-queries div.stButton:nth-of-type(1) button::before,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div.stButton:nth-of-type(1) button::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("{uri_q_cpu}") no-repeat center;
+    background-size: contain;
+    flex-shrink: 0;
+}}
+
+.sidebar-queries div.stButton:nth-of-type(2) button::before,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div.stButton:nth-of-type(2) button::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("{uri_q_cores}") no-repeat center;
+    background-size: contain;
+    flex-shrink: 0;
+}}
+
+.sidebar-queries div.stButton:nth-of-type(3) button::before,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div.stButton:nth-of-type(3) button::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("{uri_q_ram}") no-repeat center;
+    background-size: contain;
+    flex-shrink: 0;
+}}
+
+.sidebar-queries div.stButton:nth-of-type(4) button::before,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div.stButton:nth-of-type(4) button::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("{uri_q_mem_util}") no-repeat center;
+    background-size: contain;
+    flex-shrink: 0;
+}}
+
+.sidebar-queries div.stButton:nth-of-type(5) button::before,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div.stButton:nth-of-type(5) button::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("{uri_q_disks}") no-repeat center;
+    background-size: contain;
+    flex-shrink: 0;
+}}
+
+.sidebar-queries div.stButton:nth-of-type(6) button::before,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div.stButton:nth-of-type(6) button::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("{uri_q_gpu}") no-repeat center;
+    background-size: contain;
+    flex-shrink: 0;
+}}
+
+.sidebar-queries div.stButton:nth-of-type(7) button::before,
+[data-testid="stSidebar"] div[data-testid="stVerticalBlock"] > div.stButton:nth-of-type(7) button::before {{
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("{uri_q_overview}") no-repeat center;
+    background-size: contain;
+    flex-shrink: 0;
 }}
 
 /* ==========================================================================
    CUSTOM CARDS & CONTAINERS
+   Responsive Layout & Bulletproof Badge Wrapping
    ========================================================================== */
 
 .hw-card {{
     background: linear-gradient(145deg, #111F32 0%, #0D1726 100%);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    padding: 18px 20px;
+    padding: 16px 18px;
     margin-bottom: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -249,24 +449,25 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
 
 /* Balanced Overview Card Flex Layout */
 .hw-overview-card {{
-    min-height: 295px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    min-height: 295px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
 }}
 
 .hw-card-elevated {{
     background: linear-gradient(145deg, #16263A 0%, #101B2B 100%);
     border: 1px solid rgba(6, 182, 212, 0.25);
     border-radius: 14px;
-    padding: 20px 22px;
-    margin-bottom: 16px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     width: 100%;
     box-sizing: border-box;
 }}
 
-/* Card Top Glowing Border Line */
+/* Top Subtle Glowing Border Line */
 .hw-card::before, .hw-card-elevated::before {{
     content: "";
     position: absolute;
@@ -277,100 +478,87 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
     background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.6), transparent);
 }}
 
-/* Card Header Structure */
+/* Card Header Structure with Responsive Wrapping (Never Clips or Overflows) */
 .hw-card-header {{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px 8px !important;
+    margin-bottom: 10px !important;
+    width: 100% !important;
 }}
 
 .hw-card-title-group {{
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
 }}
 
 .hw-card-icon-badge {{
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    background: rgba(6, 182, 212, 0.1);
-    border: 1px solid rgba(6, 182, 212, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    background: rgba(6, 182, 212, 0.1) !important;
+    border: 1px solid rgba(6, 182, 212, 0.25) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
 }}
 
 .hw-card-title {{
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    letter-spacing: -0.01em !important;
+    line-height: 1.25 !important;
 }}
 
 .hw-card-badge {{
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 9999px;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    font-size: 0.68rem !important;
+    font-weight: 600 !important;
+    padding: 2px 8px !important;
+    border-radius: 9999px !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.25 !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
 }}
 
 .badge-virtual {{
-    background: rgba(245, 158, 11, 0.15);
-    color: #FBBF24;
-    border: 1px solid rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #FBBF24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
 }}
 
 .badge-dedicated {{
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ADE80;
-    border: 1px solid rgba(34, 197, 94, 0.35);
+    background: rgba(34, 197, 94, 0.15) !important;
+    color: #4ADE80 !important;
+    border: 1px solid rgba(34, 197, 94, 0.35) !important;
 }}
 
 .badge-live {{
-    background: rgba(6, 182, 212, 0.15);
-    color: var(--accent-cyan-neon);
-    border: 1px solid rgba(6, 182, 212, 0.35);
+    background: rgba(6, 182, 212, 0.15) !important;
+    color: var(--accent-cyan-neon) !important;
+    border: 1px solid rgba(6, 182, 212, 0.35) !important;
 }}
 
-.hw-primary-value {{
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
-    margin: 4px 0 6px 0;
-}}
-
-/* ==========================================================================
-   PROGRESS BARS & HERO BANNER
-   ========================================================================== */
-
-.hw-progress-track {{
-    width: 100%;
-    height: 7px;
-    background: rgba(36, 59, 83, 0.6);
-    border-radius: 9999px;
-    margin: 8px 0 6px 0;
-    overflow: hidden;
-}}
-
-.hw-progress-fill {{
-    height: 100%;
-    border-radius: 9999px;
-    background: linear-gradient(90deg, #2563EB 0%, #06B6D4 100%);
-    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}}
-
+/* Hero Banner */
 .hw-hero-banner {{
     background: linear-gradient(135deg, rgba(17, 31, 50, 0.85) 0%, rgba(13, 20, 34, 0.95) 100%);
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
-    padding: 22px 26px;
-    margin-bottom: 22px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -378,7 +566,7 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
 }}
 
 .hw-hero-title {{
-    font-size: 1.7rem;
+    font-size: 1.65rem;
     font-weight: 800;
     letter-spacing: -0.02em;
     background: linear-gradient(90deg, #F8FAFC 0%, #CBD5E1 40%, #22D3EE 100%);
@@ -388,7 +576,7 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
 }}
 
 .hw-hero-subtitle {{
-    font-size: 0.92rem;
+    font-size: 0.90rem;
     color: var(--text-secondary);
     max-width: 650px;
     line-height: 1.45;
@@ -422,16 +610,104 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label:nth-of-type(4)::before
     100% {{ transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }}
 }}
 
-/* Chat & Form Overrides */
-[data-testid="stChatInput"] {{
-    border-color: var(--border-subtle) !important;
-    background-color: var(--bg-secondary) !important;
+/* ==========================================================================
+   CHAT MESSAGES, EXPANDERS & GENERAL CONTAINERS
+   ========================================================================== */
+
+/* Chat Messages */
+[data-testid="stChatMessage"] {{
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
     border-radius: 12px !important;
+    padding: 14px 18px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
 }}
 
-[data-testid="stChatInput"]:focus-within {{
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {{
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0%, rgba(17, 31, 50, 0.95) 100%) !important;
+    border-color: rgba(37, 99, 235, 0.45) !important;
+}}
+
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {{
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(17, 31, 50, 0.95) 100%) !important;
+    border-color: rgba(6, 182, 212, 0.35) !important;
+}}
+
+[data-testid="stChatMessage"] p,
+[data-testid="stChatMessage"] span,
+[data-testid="stChatMessage"] div {{
+    color: var(--text-primary) !important;
+}}
+
+/* Expanders */
+[data-testid="stExpander"] {{
+    background-color: #0D1726 !important;
+    border: 1px solid #1E2D42 !important;
+    border-radius: 10px !important;
+    margin-top: 8px !important;
+    overflow: hidden !important;
+}}
+
+[data-testid="stExpander"] summary {{
+    color: var(--text-secondary) !important;
+    padding: 10px 14px !important;
+}}
+
+[data-testid="stExpander"] summary:hover {{
+    color: var(--accent-cyan-neon) !important;
+}}
+
+[data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
+    background-color: var(--bg-primary) !important;
+    border-top: 1px solid #1E2D42 !important;
+    padding: 14px !important;
+}}
+
+/* JSON Display */
+div.react-json-view,
+[data-testid="stJson"] {{
+    background-color: var(--bg-primary) !important;
+    border-radius: 8px !important;
+}}
+
+/* General Buttons */
+.stButton > button {{
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--text-primary) !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}}
+
+.stButton > button:hover {{
+    background: var(--bg-card-elevated) !important;
     border-color: var(--accent-cyan-core) !important;
-    box-shadow: 0 0 16px rgba(6, 182, 212, 0.2) !important;
+    color: var(--accent-cyan-neon) !important;
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.2) !important;
+    transform: translateY(-1px) !important;
+}}
+
+/* Progress Track and Fill */
+.hw-progress-track {{
+    width: 100%;
+    height: 7px;
+    background: rgba(36, 59, 83, 0.6);
+    border-radius: 9999px;
+    margin: 8px 0 6px 0;
+    overflow: hidden;
+}}
+
+.hw-progress-fill {{
+    height: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #2563EB 0%, #06B6D4 100%);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}}
+
+.hw-progress-fill-warning {{
+    background: linear-gradient(90deg, #F59E0B 0%, #EF4444 100%) !important;
 }}
 
 /* Responsive Adjustments */

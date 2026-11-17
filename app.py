@@ -34,9 +34,16 @@ from ui.components import (
     render_semicircular_gauge,
     render_per_core_chart,
     render_cpu_telemetry_panel,
+    render_cpu_history_chart,
+    render_cpu_history_panel,
+    render_per_core_history_chart,
+    render_per_core_history_panel,
+    render_memory_allocation_donut_chart,
     render_memory_breakdown_panel,
     render_runtime_history_chart,
+    render_runtime_history_panel,
     render_filesystem_table,
+    render_filesystem_panel,
 )
 
 # Initialize CPU measurement baseline for non-blocking telemetry
@@ -55,6 +62,8 @@ def initialize_session_state() -> None:
         st.session_state.session_history = []
     if "active_nav" not in st.session_state:
         st.session_state.active_nav = "System Dashboard"
+    if "pending_nav" not in st.session_state:
+        st.session_state.pending_nav = None
 
 
 def load_hardware_summary() -> Dict[str, Any]:
@@ -70,13 +79,15 @@ def load_hardware_summary() -> Dict[str, Any]:
 def record_telemetry_sample(mem_data: Dict[str, Any]) -> None:
     """Records a single timestamped real runtime telemetry sample into session history."""
     cpu_val = psutil.cpu_percent(interval=None)
+    per_cpu_vals = psutil.cpu_percent(percpu=True)
     ram_pct = mem_data.get("details", {}).get("percent_used", 0.0)
     current_time = datetime.now().strftime("%H:%M:%S")
 
     st.session_state.session_history.append({
         "timestamp": current_time,
         "cpu_percent": float(cpu_val),
-        "ram_percent": float(ram_pct)
+        "ram_percent": float(ram_pct),
+        "per_core": [float(v) for v in per_cpu_vals]
     })
 
     # Keep latest 30 samples to prevent unbounded memory growth
@@ -87,7 +98,7 @@ def record_telemetry_sample(mem_data: Dict[str, Any]) -> None:
 def main():
     initialize_session_state()
 
-    # Apply CSS Theme System
+    # Apply CSS Theme System (Strictly eliminates all white backgrounds)
     st.markdown(get_theme_css(), unsafe_allow_html=True)
 
     # Initial hardware load if needed
@@ -102,6 +113,11 @@ def main():
     # Measure current non-blocking CPU utilization
     current_cpu_percent = psutil.cpu_percent(interval=None)
     per_cpu_cores = psutil.cpu_percent(percpu=True)
+
+    # Handle pending programmatic navigation redirect before radio widget is instantiated
+    if st.session_state.pending_nav:
+        st.session_state.active_nav = st.session_state.pending_nav
+        st.session_state.pending_nav = None
 
     # --- SIDEBAR NAVIGATION & TELEMETRY ---
     with st.sidebar:
@@ -127,14 +143,17 @@ def main():
             "Subprocess Security"
         ]
         
-        curr_index = nav_options.index(st.session_state.active_nav) if st.session_state.active_nav in nav_options else 0
-        nav_selection = st.radio(
+        # Validate active_nav state
+        if st.session_state.active_nav not in nav_options:
+            st.session_state.active_nav = "System Dashboard"
+
+        # Explicit key binds radio directly to session_state['active_nav'] with a stable element ID
+        st.radio(
             "Select Dashboard View",
             nav_options,
-            index=curr_index,
+            key="active_nav",
             label_visibility="collapsed"
         )
-        st.session_state.active_nav = nav_selection
 
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
@@ -165,22 +184,22 @@ def main():
 </div>"""
         render_html(telemetry_sidebar_html)
 
-        # Action Buttons
+        # Action Buttons with Local SVG Icons
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
-            if st.button("Refresh Telemetry", use_container_width=True):
+            if st.button("Refresh Telemetry", key="sidebar_btn_refresh", use_container_width=True):
                 st.session_state.hardware_cache = load_hardware_summary()
                 st.session_state.last_refreshed = datetime.now().strftime("%H:%M:%S")
                 record_telemetry_sample(st.session_state.hardware_cache["memory"])
                 st.rerun()
         with col_btn2:
-            if st.button("Clear Chat", use_container_width=True):
+            if st.button("Clear Chat", key="sidebar_btn_clear", use_container_width=True):
                 st.session_state.messages = []
                 st.rerun()
 
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-        # Suggested Questions Quick Launch (Clean, No Emojis)
+        # Suggested Questions Quick Launch with Bundled Lucide SVG Icons
         render_html('<div style="font-size: 0.75rem; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Quick Queries</div>')
         quick_questions = [
             "What CPU is installed?",
@@ -203,7 +222,7 @@ def main():
                     "intent": response.get("intent"),
                     "structured_data": response.get("structured_data", {})
                 })
-                st.session_state.active_nav = "AI Hardware Assistant"
+                st.session_state.pending_nav = "AI Hardware Assistant"
                 st.rerun()
 
     # --- TOP HERO BANNER ---
@@ -222,11 +241,13 @@ def main():
 
         st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
 
-        # Two-Column Performance & Telemetry Preview (Symmetric Layout)
+        # Two-Column Performance & Advanced Telemetry Section
         dash_col1, dash_col2 = st.columns([1, 1])
 
         with dash_col1:
             render_cpu_telemetry_panel(per_cpu_cores, cpu_details)
+            st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+            render_cpu_history_panel(st.session_state.session_history)
 
         with dash_col2:
             render_memory_breakdown_panel(mem_details)
@@ -255,7 +276,7 @@ Type any natural-language query to query your hardware specifications instantly.
                 "intent": response.get("intent"),
                 "structured_data": response.get("structured_data", {})
             })
-            st.session_state.active_nav = "AI Hardware Assistant"
+            st.session_state.pending_nav = "AI Hardware Assistant"
             st.rerun()
 
     # --- VIEW 2: REAL-TIME MONITORING ---
@@ -275,7 +296,7 @@ Type any natural-language query to query your hardware specifications instantly.
             gauge_cpu_html = f"""<div class="hw-card-elevated" style="text-align: center;">
 <div class="hw-card-header">
 <div class="hw-card-title-group">
-<div class="hw-card-icon-badge">{get_icon("cpu", size=20, color="#22D3EE")}</div>
+<div class="hw-card-icon-badge">{get_icon("cpu", size=18, color="#22D3EE")}</div>
 <div class="hw-card-title">Real-Time CPU Load</div>
 </div>
 <span class="hw-card-badge badge-live">{cpu_details.get('total_cpus', '2')} Cores</span>
@@ -288,7 +309,7 @@ Type any natural-language query to query your hardware specifications instantly.
             gauge_ram_html = f"""<div class="hw-card-elevated" style="text-align: center;">
 <div class="hw-card-header">
 <div class="hw-card-title-group">
-<div class="hw-card-icon-badge">{get_icon("memory-stick", size=20, color="#3B82F6")}</div>
+<div class="hw-card-icon-badge">{get_icon("memory-stick", size=18, color="#3B82F6")}</div>
 <div class="hw-card-title">Real-Time RAM Usage</div>
 </div>
 <span class="hw-card-badge badge-live">{mem_details.get('total_human', 'N/A')} Total</span>
@@ -301,33 +322,17 @@ Type any natural-language query to query your hardware specifications instantly.
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
         render_cpu_telemetry_panel(per_cpu_cores, cpu_details)
 
-        # Session Time-Series Line Chart Panel
+        # Multi-Core Historical Timeline Panel
         st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
-        history_header = f"""<div class="hw-card-elevated" style="margin-bottom: 0px;">
-<div class="hw-card-header">
-<div class="hw-card-title-group">
-<div class="hw-card-icon-badge">{get_icon("chart-no-axes-combined", size=20, color="#38BDF8")}</div>
-<div class="hw-card-title">Session Telemetry History (CPU vs. RAM)</div>
-</div>
-<span class="hw-card-badge badge-live">{len(st.session_state.session_history)} Samples Recorded</span>
-</div>"""
-        render_html(history_header)
-        render_runtime_history_chart(st.session_state.session_history)
-        render_html("</div>")
+        render_per_core_history_panel(st.session_state.session_history)
+
+        # Session Time-Series Line Chart Panel (CPU vs. RAM)
+        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+        render_runtime_history_panel(st.session_state.session_history)
 
         # Storage & Filesystem Utilization Table Panel
         st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
-        storage_header = f"""<div class="hw-card-elevated" style="margin-bottom: 0px;">
-<div class="hw-card-header">
-<div class="hw-card-title-group">
-<div class="hw-card-icon-badge">{get_icon("hard-drive", size=20, color="#22D3EE")}</div>
-<div class="hw-card-title">Mounted Filesystems & Storage Partitions</div>
-</div>
-<span class="hw-card-badge badge-live">{len(hw['storage'].get('details', {}).get('mounted_filesystems', []))} Mounts</span>
-</div>"""
-        render_html(storage_header)
-        render_filesystem_table(hw["storage"].get("details", {}).get("mounted_filesystems", []))
-        render_html("</div>")
+        render_filesystem_panel(hw["storage"].get("details", {}).get("mounted_filesystems", []))
 
     # --- VIEW 3: AI ASSISTANT CHAT ---
     elif st.session_state.active_nav == "AI Hardware Assistant":
@@ -343,7 +348,7 @@ Type any natural-language query to query your hardware specifications instantly.
 </div>"""
         render_html(assistant_header)
 
-        # Suggested Query Chips (Clean, No Emojis)
+        # Suggested Query Chips (Clean, Professional Dark Buttons)
         render_html('<div style="font-size: 0.8rem; font-weight: 600; color: #94A3B8; margin-bottom: 8px;">Suggested Questions:</div>')
         chip_col1, chip_col2, chip_col3 = st.columns(3)
         with chip_col1:
@@ -446,7 +451,7 @@ or graphics controllers. Responses are verified through local system commands.
                     with st.expander(f"Diagnostic Inspection: `{msg.get('tool_used')}` (Intent: `{msg.get('intent')}`)"):
                         st.json(msg.get("structured_data", {}))
 
-        # Main Chat Input
+        # Main Chat Input (Dark floating container)
         assistant_query = st.chat_input("Ask a hardware question (e.g. 'How much RAM is free?' or 'What CPU is installed?')...", key="chat_page_input")
         if assistant_query:
             st.session_state.messages.append({"role": "user", "content": assistant_query})
@@ -488,7 +493,7 @@ or graphics controllers. Responses are verified through local system commands.
             sec_card1 = f"""<div class="hw-card-elevated">
 <div class="hw-card-header">
 <div class="hw-card-title-group">
-<div class="hw-card-icon-badge">{get_icon("terminal", size=20, color="#22D3EE")}</div>
+<div class="hw-card-icon-badge">{get_icon("terminal", size=18, color="#22D3EE")}</div>
 <div class="hw-card-title">Security Policies Enforced</div>
 </div>
 </div>
@@ -506,7 +511,7 @@ or graphics controllers. Responses are verified through local system commands.
             sec_card2 = f"""<div class="hw-card-elevated">
 <div class="hw-card-header">
 <div class="hw-card-title-group">
-<div class="hw-card-icon-badge">{get_icon("settings", size=20, color="#38BDF8")}</div>
+<div class="hw-card-icon-badge">{get_icon("settings", size=18, color="#38BDF8")}</div>
 <div class="hw-card-title">Approved Allow-List Inventory</div>
 </div>
 </div>

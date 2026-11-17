@@ -14,8 +14,14 @@ from dotenv import load_dotenv
 
 from services.tool_router import route_question
 
-# Load environment variables from .env if present
+# Load environment variables from .env or .env.example if present
 load_dotenv()
+if not os.getenv("GEMINI_API_KEY"):
+    load_dotenv(".env.example")
+
+# Primary model and resilient fallback models
+GEMINI_MODEL = "gemini-3.8-flash"
+GEMINI_FALLBACK_MODELS = ["gemini-3.8-flash", "gemini-3-flash-preview"]
 
 
 def get_gemini_api_key() -> Optional[str]:
@@ -33,8 +39,8 @@ def call_gemini_api(prompt: str, context_json: str, api_key: str, timeout: float
     """
     Calls the Gemini REST API using requests.
     Strictly instructs the model to rely only on the provided hardware data.
+    Attempts the primary GEMINI_MODEL first, falling back to GEMINI_FALLBACK_MODELS if experiencing high demand.
     """
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
 
     system_instruction = (
@@ -69,20 +75,27 @@ def call_gemini_api(prompt: str, context_json: str, api_key: str, timeout: float
         }
     }
 
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=timeout)
-        if response.status_code == 200:
-            res_json = response.json()
-            candidates = res_json.get("candidates", [])
-            if candidates:
-                content = candidates[0].get("content", {})
-                parts = content.get("parts", [])
-                if parts:
-                    return parts[0].get("text", "").strip()
-        return None
-    except Exception:
-        # Fall back gracefully on network or API errors
-        return None
+    models_to_try = [GEMINI_MODEL]
+    for fb in GEMINI_FALLBACK_MODELS:
+        if fb not in models_to_try:
+            models_to_try.append(fb)
+
+    for model_name in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=timeout)
+            if response.status_code == 200:
+                res_json = response.json()
+                candidates = res_json.get("candidates", [])
+                if candidates:
+                    content = candidates[0].get("content", {})
+                    parts = content.get("parts", [])
+                    if parts:
+                        return parts[0].get("text", "").strip()
+        except Exception:
+            continue
+
+    return None
 
 
 def ask_assistant(query: str, prefer_ai: bool = True) -> Dict[str, Any]:
